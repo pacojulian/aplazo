@@ -1,40 +1,59 @@
 package com.aplazo.interview.service;
 
-import com.aplazo.interview.DAO.CreditRequest;
-import com.aplazo.interview.DAO.CreditResponse;
-import com.aplazo.interview.service.impl.CreditRequestServiceImpl;
-import org.junit.jupiter.api.Test;
-
-import java.util.List;
-
 import static org.junit.jupiter.api.Assertions.*;
 
-public class CreditRequestServiceImplTest {
-    CreditRequestServiceImpl creditRequestService = new CreditRequestServiceImpl();
+import com.aplazo.interview.DAO.CreditRequest;
+import com.aplazo.interview.DAO.CreditResponse;
+import com.aplazo.interview.repository.DataRepository;
+import com.aplazo.interview.service.impl.CreditRequestServiceImpl;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.mockito.Mock;
+import org.mockito.InjectMocks;
+import org.mockito.MockitoAnnotations;
+
+import java.util.ArrayList;
+import java.util.List;
+
+class CreditRequestServiceImplTest {
+    @Mock
+    private DataRepository dataRepository;
+
+    @InjectMocks
+    private CreditRequestServiceImpl service;
+
+    @BeforeEach
+    void setUp() {
+        MockitoAnnotations.initMocks(this);
+    }
 
     @Test
-    public void testCalculateCredit() {
+    void calculateCredit_validInput_returnsCorrectResponses() {
         CreditRequest request = new CreditRequest();
-        request.setAmount(5000.0);
+        request.setTerms(20);
         request.setRate(10.0);
-        request.setTerms(52);
-        List<CreditResponse> creditResponses = creditRequestService.calculateCredit(request);
-        assertNotNull(creditResponses);
-        assertEquals(52, creditResponses.size());
-        assertEquals(105.76923076923077, creditResponses.get(0).getAmount(), 0.01);
+        request.setAmount(1000.0);
+        List<CreditResponse> expectedResponses = new ArrayList<>();
+        for (int i = 0; i < request.getTerms(); i++) {
+            CreditResponse response = new CreditResponse();
+            response.setPaymentNumber(i);
+            response.setAmount(51.92307692307693);
+            expectedResponses.add(response);
+        }
+
+        List<CreditResponse> actualResponses = service.calculateCredit(request);
+
+        assertNotNull(actualResponses);
+        assertEquals(expectedResponses.size(), actualResponses.size());
+        for (int i = 0; i < expectedResponses.size(); i++) {
+            assertEquals(expectedResponses.get(i).getPaymentNumber(), actualResponses.get(i).getPaymentNumber());
+            assertEquals(expectedResponses.get(i).getAmount(), actualResponses.get(i).getAmount());
+        }
     }
 
     @Test
-    public void testCalculateCredit_InvalidInput() {
-        CreditRequest request = new CreditRequest();
-        request.setAmount(1000.0);
-        request.setRate(5.0);
-        request.setTerms(0);
-        List<CreditResponse> creditResponses = creditRequestService.calculateCredit(request);
-        assertEquals(0, creditResponses.size());
-
+    void calculateCredit_nullInput_returnsNull() {
+        CreditRequest request = null;
+        assertNull(service.calculateCredit(request));
     }
-
-
-
 }
